@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desafío CCL: Guardianes de la Confidencialidad</title>
+    <!-- Tailwind CSS para el diseño -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Iconos FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                        display: ['Space Grotesk', 'sans-serif'],
+                    },
+                    colors: {
+                        navy: {
+                            800: '#1e3a8a',
+                            900: '#0f172a',
+                            950: '#020617',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background: radial-gradient(circle at center, #0f172a 0%, #020617 100%);
+        }
+        .glow-effect {
+            box-shadow: 0 0 25px rgba(59, 130, 246, 0.2);
+        }
+        .correct-glow {
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.4);
+        }
+        .wrong-glow {
+            box-shadow: 0 0 25px rgba(239, 68, 68, 0.4);
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        .floating-element {
+            animation: float 6s ease-in-out infinite;
+        }
+        /* Efecto de confeti minimalista por CSS */
+        @keyframes fall {
+            0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+        }
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+            animation: fall 3s linear infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-100 flex items-center justify-center p-4 overflow-x-hidden">
+
+    <div class="w-full max-w-4xl bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
+        
+        <!-- Elementos decorativos de fondo -->
+        <div class="absolute -top-40 -left-40 w-80 h-80 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-40 -right-40 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <!-- Pantalla de Inicio -->
+        <div id="screen-intro" class="flex flex-col items-center text-center py-6">
+            <div class="mb-6 relative">
+                <!-- Imagen recuperada para privacidad y protección de datos -->
+                <img src="http://googleusercontent.com/image_collection/image_retrieval/5856357935159064763_0" alt="Protección de datos" class="w-48 h-48 md:w-56 md:h-56 object-contain rounded-2xl glow-effect floating-element">
+                <div class="absolute -bottom-2 -right-2 bg-blue-600 text-white rounded-full p-3 shadow-lg">
+                    <i class="fa-solid fa-shield-halved text-2xl"></i>
+                </div>
+            </div>
+
+            <h1 class="font-display font-bold text-3xl md:text-5xl text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-300 to-blue-200 mb-4">
+                Desafío CCL
+            </h1>
+            <p class="text-xl font-semibold text-blue-300 mb-2">Guardianes de la Confidencialidad</p>
+            <p class="text-slate-400 max-w-xl mb-8 leading-relaxed">
+                ¡Bienvenidos, miembros del Comité de Convivencia! Como defensores de un entorno laboral sano y seguro, vuestro mayor superpoder es proteger la confidencialidad y los datos de las personas. ¿Lograrás resolver todos los casos éticos con éxito?
+            </p>
+
+            <button onclick="startGame()" class="px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-2xl font-bold text-lg shadow-lg hover:shadow-blue-500/20 transform hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-3">
+                <i class="fa-solid fa-play"></i> Comenzar Investigación
+            </button>
+        </div>
+
+        <!-- Pantalla de Juego / Casos -->
+        <div id="screen-game" class="hidden">
+            <!-- Barra de progreso e información superior -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-6 border-b border-slate-800">
+                <div class="flex items-center gap-3">
+                    <div class="bg-blue-950 border border-blue-800 px-3 py-1.5 rounded-xl text-xs font-semibold text-blue-400 uppercase tracking-wider">
+                        Caso <span id="current-case-num">1</span> de <span id="total-cases-num">7</span>
+                    </div>
+                    <div class="text-slate-400 text-sm">
+                        Protección de Datos & Ética
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-1.5 text-emerald-400 font-semibold">
+                        <i class="fa-solid fa-check-circle"></i> <span id="correct-score">0</span>
+                    </div>
+                    <div class="w-32 bg-slate-800 rounded-full h-2.5 overflow-hidden">
+                        <div id="progress-bar" class="bg-blue-500 h-full transition-all duration-300" style="width: 14%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contenido del caso interactivo -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-6">
+                <!-- Tarjeta del Caso -->
+                <div class="lg:col-span-7 flex flex-col justify-between">
+                    <div>
+                        <div id="badge-topic" class="text-xs font-bold text-blue-400 tracking-wider uppercase mb-2">Tema 1: Deber de Reserva</div>
+                        <h2 id="case-title" class="font-display font-semibold text-xl md:text-2xl mb-4 text-white leading-tight">
+                            El rumor de la cafetería
+                        </h2>
+                        <p id="case-description" class="text-slate-300 leading-relaxed text-base md:text-lg mb-6 bg-slate-950/40 p-4 rounded-2xl border border-slate-800">
+                            Un compañero te pregunta de forma casual en el descanso sobre un caso sonado que involucra a un jefe de tu misma área. Te dice que solo quiere saber si ya llegaron a un acuerdo para "ayudar con la calma en el equipo".
+                        </p>
+                    </div>
+
+                    <!-- Cuadro de retroalimentación inmediato -->
+                    <div id="feedback-box" class="hidden p-4 rounded-2xl border mb-4 transform scale-95 opacity-0 transition-all duration-300">
+                        <div class="flex items-start gap-3">
+                            <span id="feedback-icon" class="text-2xl mt-0.5"></span>
+                            <div>
+                                <h4 id="feedback-title" class="font-bold text-base mb-1"></h4>
+                                <p id="feedback-text" class="text-sm leading-relaxed"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Opciones de Respuesta -->
+                <div class="lg:col-span-5 flex flex-col gap-3 justify-center">
+                    <button onclick="selectOption(0)" id="opt-0" class="w-full text-left p-4 rounded-2xl border border-slate-800 bg-slate-950/30 hover:bg-slate-800/40 hover:border-blue-700 transition-all duration-200 group flex gap-3">
+                        <span class="w-7 h-7 flex-shrink-0 bg-slate-800 text-slate-400 font-bold rounded-lg flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors duration-200">A</span>
+                        <span id="text-opt-0" class="text-sm md:text-base text-slate-300 group-hover:text-slate-100">Le explicas con discreción que no puedes revelar nada por reserva del comité.</span>
+                    </button>
+
+                    <button onclick="selectOption(1)" id="opt-1" class="w-full text-left p-4 rounded-2xl border border-slate-800 bg-slate-950/30 hover:bg-slate-800/40 hover:border-blue-700 transition-all duration-200 group flex gap-3">
+                        <span class="w-7 h-7 flex-shrink-0 bg-slate-800 text-slate-400 font-bold rounded-lg flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors duration-200">B</span>
+                        <span id="text-opt-1" class="text-sm md:text-base text-slate-300 group-hover:text-slate-100">Le dices que sí hay un proceso activo pero que el jefe involucrado está muy tranquilo.</span>
+                    </button>
+
+                    <button onclick="selectOption(2)" id="opt-2" class="w-full text-left p-4 rounded-2xl border border-slate-800 bg-slate-950/30 hover:bg-slate-800/40 hover:border-blue-700 transition-all duration-200 group flex gap-3">
+                        <span class="w-7 h-7 flex-shrink-0 bg-slate-800 text-slate-400 font-bold rounded-lg flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors duration-200">C</span>
+                        <span id="text-opt-2" class="text-sm md:text-base text-slate-300 group-hover:text-slate-100">Le comentas en privado únicamente quién es la persona que interpuso la queja.</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Botón de siguiente caso -->
+            <div class="flex justify-end pt-4 border-t border-slate-800/60">
+                <button id="btn-next" onclick="nextCase()" disabled class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl opacity-50 cursor-not-allowed hover:bg-blue-500 transition-all duration-200 flex items-center gap-2">
+                    Siguiente Caso <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Pantalla Final / Resultados -->
+        <div id="screen-result" class="hidden flex flex-col items-center text-center py-6">
+            <!-- Confeti contenedor -->
+            <div id="confetti-container" class="absolute inset-0 pointer-events-none overflow-hidden rounded-3xl"></div>
+
+            <div class="mb-6 relative">
+                <!-- Imagen recuperada para documentos confidenciales / candado -->
+                <img src="http://googleusercontent.com/image_collection/image_retrieval/5606207432864654592_0" alt="Custodio Seguro" class="w-40 h-40 object-contain rounded-full shadow-lg border border-slate-800 p-2 bg-slate-950/80 floating-element">
+            </div>
+
+            <h2 class="font-display font-bold text-3xl md:text-4xl text-emerald-400 mb-2">¡Misión Cumplida!</h2>
+            <p class="text-xl text-slate-300 mb-6">Evaluación Finalizada con Éxito</p>
+
+            <!-- Resumen de puntuación -->
+            <div class="bg-slate-950/60 border border-slate-800 rounded-2xl p-6 w-full max-w-md mb-8">
+                <div class="text-sm text-slate-400 mb-2 uppercase tracking-wider font-semibold">Tu Nivel de Integridad</div>
+                <div id="final-rating" class="text-2xl font-bold text-blue-400 mb-4">Guardián Experto</div>
+                
+                <div class="grid grid-cols-2 gap-4 text-center">
+                    <div class="bg-slate-900 border border-slate-800/80 rounded-xl p-3">
+                        <div class="text-xs text-slate-400">Casos Resueltos</div>
+                        <div id="final-score" class="text-2xl font-bold text-white">7 / 7</div>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800/80 rounded-xl p-3">
+                        <div class="text-xs text-slate-400">Porcentaje de Éxito</div>
+                        <div id="final-pct" class="text-2xl font-bold text-white">100%</div>
+                    </div>
+                </div>
+            </div>
+
+            <p id="final-feedback-text" class="text-slate-400 max-w-lg mb-8 leading-relaxed">
+                ¡Excelente! Has demostrado un conocimiento absoluto sobre el manejo ético de la información, el deber de reserva y la custodia de datos del comité. Estás listo para guiar a tus compañeros de forma ejemplar.
+            </p>
+
+            <div class="flex flex-col sm:flex-row gap-4">
+                <button onclick="startGame()" class="px-6 py-3 border border-slate-700 hover:bg-slate-800 rounded-xl font-semibold transition-all duration-200">
+                    <i class="fa-solid fa-rotate-right mr-2"></i> Intentar de Nuevo
+                </button>
+                <button onclick="alert('¡Excelente idea! Puedes tomar una captura de pantalla de estos resultados como evidencia de tu repaso.')" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold shadow-lg transition-all duration-200 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-award"></i> Obtener Insignia
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Script del Juego -->
+    <script>
+        // Audio sintetizado (Web Audio API)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playSound(type) {
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                if (type === 'correct') {
+                    // Tono de éxito ascendente agradable
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+                    osc.frequency.exponentialRampToValueAtTime(783.99, audioCtx.currentTime + 0.15); // G5
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.3);
+                } else if (type === 'wrong') {
+                    // Tono de error bajo y áspero
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.25);
+                } else if (type === 'win') {
+                    // Fanfarria triunfal corta
+                    const notes = [261.63, 329.63, 392.00, 523.25]; // C4, E4, G4, C5
+                    notes.forEach((freq, i) => {
+                        const individualOsc = audioCtx.createOscillator();
+                        const individualGain = audioCtx.createGain();
+                        individualOsc.connect(individualGain);
+                        individualGain.connect(audioCtx.destination);
+                        individualOsc.frequency.setValueAtTime(freq, audioCtx.currentTime + i * 0.1);
+                        individualGain.gain.setValueAtTime(0.08, audioCtx.currentTime + i * 0.1);
+                        individualGain.gain.exponentialRampToValueAtTime(0.005, audioCtx.currentTime + i * 0.1 + 0.4);
+                        individualOsc.start(audioCtx.currentTime + i * 0.1);
+                        individualOsc.stop(audioCtx.currentTime + i * 0.1 + 0.45);
+                    });
+                }
+            } catch (e) {
+                console.log('Audio Context block / no soportado');
+            }
+        }
+
+        // Base de datos de Casos y Preguntas
+        const cases = [
+            {
+                topic: "1. Deber de Reserva del Comité",
+                title: "Pregunta casual en los pasillos",
+                description: "Un colega de tu departamento te pregunta casualmente sobre un expediente activo del comité alegando que solo desea saber si las partes llegaron a un acuerdo de conciliación para 'calmar el ambiente laboral'.",
+                options: [
+                    "Le respondes con firmeza que todos los asuntos discutidos son de reserva absoluta del comité y que no puedes brindar información.",
+                    "Le comentas muy por encima que el tema se está resolviendo bien pero sin dar nombres ni detalles del quejoso.",
+                    "Le sugieres que le pregunte directamente a una de las partes interesadas ya que ellos son libres de contarlo."
+                ],
+                correct: 0,
+                explanation: "¡Correcto! El deber de reserva del Comité de Convivencia Laboral es absoluto y permanente. Ningún miembro puede divulgar trámites, estados del caso ni mucho menos identidades."
+            },
+            {
+                topic: "2. Información Sensible y Datos Personales",
+                title: "La prueba psicológica",
+                description: "Durante la entrega de soportes para una denuncia laboral, la trabajadora quejosa presenta un informe médico con detalles clínicos de su estado de salud psicológica y psiquiátrica. ¿Cómo se califica legalmente este tipo de información?",
+                options: [
+                    "Se trata como dato personal público por ser una prueba dentro de una queja laboral oficial.",
+                    "Es un dato sensible bajo la ley 1581 de 2012, requiriendo máximas medidas de protección ya que afecta la intimidad profunda de la persona.",
+                    "Se cataloga como un dato semiprivado que se puede archivar en la carpeta general corporativa."
+                ],
+                correct: 1,
+                explanation: "¡Exacto! El estado de salud física o mental, al igual que convicciones íntimas u orientación sexual, son Datos Sensibles y su uso indebido puede generar discriminación severa."
+            },
+            {
+                topic: "3. Principios de la Ley 1581 de 2012",
+                title: "Solicitud de Recursos Humanos",
+                description: "El departamento de Recursos Humanos de la empresa te pide compartir las actas de una investigación del comité para evaluar el rendimiento laboral de uno de los empleados involucrados. ¿Qué principio rige en este caso?",
+                options: [
+                    "Debes negarte en virtud del Principio de Finalidad, ya que los datos recopilados por el comité solo deben usarse para el trámite de convivencia y no para calificar laboralmente.",
+                    "Se les puede enviar con una marca de agua confidencial en cumplimiento del Principio de Transparencia.",
+                    "Se deben entregar inmediatamente porque el área de Talento Humano es el jefe directo de todos los archivos organizacionales."
+                ],
+                correct: 0,
+                explanation: "¡Gran decisión! Por el Principio de Finalidad, la información que recibe el CCL únicamente se puede emplear para las finalidades del trámite de convivencia estipuladas legalmente."
+            },
+            {
+                topic: "4. Autorización para Tratamiento de Datos",
+                title: "El testimonio del testigo clave",
+                description: "Vas a entrevistar a un testigo de un presunto caso de acoso. Antes de encender la grabadora de voz o plasmar su testimonio en el acta física, ¿qué paso formal es obligatorio?",
+                options: [
+                    "Tomar su testimonio normalmente; al final del año el comité solicita una firma global a todos los empleados de la organización.",
+                    "Obtener su consentimiento previo, expreso e informado mediante un formato firmado de autorización de tratamiento de datos personales.",
+                    "No es obligatoria la autorización por tratarse de un comité de ley amparado por el reglamento de trabajo."
+                ],
+                correct: 1,
+                explanation: "¡Fabuloso! De acuerdo con la Ley 1581, antes de recolectar cualquier dato personal se debe contar con el consentimiento claro, informado y expreso de cada titular."
+            },
+            {
+                topic: "5. Custodia y Archivo Seguro",
+                title: "La carpeta compartida en la nube",
+                description: "El secretario del comité está cansado de transportar las actas físicas y decide escanearlas todas y subirlas a una carpeta de Google Drive personal compartida mediante enlace libre a los demás miembros. ¿Es correcto?",
+                options: [
+                    "No. Las actas y pruebas digitales deben guardarse estrictamente en redes institucionales protegidas, con accesos limitados solo a los miembros activos del comité con contraseñas seguras.",
+                    "Sí. El uso de la nube optimiza el tiempo y facilita la consulta de la información desde cualquier dispositivo del comité.",
+                    "Sí, siempre y cuando no le comparta el enlace a personas ajenas a la compañía."
+                ],
+                correct: 0,
+                explanation: "¡Correcto! El secretario del comité ostenta la custodia física y digital. Archivar en cuentas personales o nubes públicas sin control rompe las directrices de seguridad de datos."
+            },
+            {
+                topic: "6. Riesgos por Filtración de Información",
+                title: "El efecto dominó",
+                description: "Se filtra a un grupo de WhatsApp el nombre de un trabajador involucrado en una queja por presunto acoso. ¿Cuál de los siguientes riesgos se materializa de manera inmediata para la víctima?",
+                options: [
+                    "Una perdida de la parte del salario mensual del trabajador por parte de la gerencia.",
+                    "La revictimización directa, daño grave a su reputación, aumento de estrés laboral severo y pérdida de fe en el comité.",
+                    "No se materializa ningún riesgo individual si la empresa desmiente la información de forma pública."
+                ],
+                correct: 1,
+                explanation: "¡Así es! Las filtraciones causan daños psicológicos y sociales irreparables al trabajador quejoso o denunciado, destruyendo el clima laboral y la credibilidad de la institución."
+            },
+            {
+                topic: "7. Responsabilidad por Incumplimiento",
+                title: "Consecuencias de una mala práctica",
+                description: "Se comprueba científicamente que un miembro del comité reveló voluntariamente un expediente a personas ajenas. ¿Qué sanciones puede enfrentar este miembro de manera individual?",
+                options: [
+                    "Un llamado de atención leve y una reubicación de su puesto de trabajo dentro del comité.",
+                    "Remoción definitiva del comité, sanciones disciplinarias de despido justificado y posibles responsabilidades penales de acuerdo al código penal colombiano.",
+                    "Ninguna, puesto que pertenecer al comité otorga inmunidad total frente a la normativa laboral de la empresa."
+                ],
+                correct: 1,
+                explanation: "¡Correcto! La violación del deber de reserva y la filtración de datos son catalogadas como faltas graves que derivan en despido inmediato y tipifican delitos penales en Colombia."
+            }
+        ];
+
+        let currentCaseIdx = 0;
+        let score = 0;
+        let hasAnswered = false;
+
+        // Iniciar juego
+        function startGame() {
+            currentCaseIdx = 0;
+            score = 0;
+            hasAnswered = false;
+            
+            document.getElementById('screen-intro').classList.add('hidden');
+            document.getElementById('screen-result').classList.add('hidden');
+            document.getElementById('screen-game').classList.remove('hidden');
+            
+            loadCase();
+        }
+
+        // Cargar caso actual
+        function loadCase() {
+            hasAnswered = false;
+            const currentCase = cases[currentCaseIdx];
+            
+            // Actualizar datos superiores
+            document.getElementById('current-case-num').innerText = currentCaseIdx + 1;
+            document.getElementById('total-cases-num').innerText = cases.length;
+            document.getElementById('correct-score').innerText = score;
+            
+            // Actualizar barra
+            const progressPct = ((currentCaseIdx + 1) / cases.length) * 100;
+            document.getElementById('progress-bar').style.width = `${progressPct}%`;
+
+            // Cargar textos
+            document.getElementById('badge-topic').innerText = currentCase.topic;
+            document.getElementById('case-title').innerText = currentCase.title;
+            document.getElementById('case-description').innerText = currentCase.description;
+
+            // Cargar respuestas
+            document.getElementById('text-opt-0').innerText = currentCase.options[0];
+            document.getElementById('text-opt-1').innerText = currentCase.options[1];
+            document.getElementById('text-opt-2').innerText = currentCase.options[2];
+
+            // Resetear estilos de los botones
+            for (let i = 0; i < 3; i++) {
+                const btn = document.getElementById(`opt-${i}`);
+                btn.className = "w-full text-left p-4 rounded-2xl border border-slate-800 bg-slate-950/30 hover:bg-slate-800/40 hover:border-blue-700 transition-all duration-200 group flex gap-3";
+                btn.disabled = false;
+            }
+
+            // Ocultar feedback y bloquear el botón siguiente
+            document.getElementById('feedback-box').className = "hidden p-4 rounded-2xl border mb-4 transform scale-95 opacity-0 transition-all duration-300";
+            document.getElementById('btn-next').disabled = true;
+            document.getElementById('btn-next').classList.add('opacity-50', 'cursor-not-allowed');
+        }
+
+        // Seleccionar una opción
+        function selectOption(index) {
+            if (hasAnswered) return;
+            hasAnswered = true;
+
+            const currentCase = cases[currentCaseIdx];
+            const isCorrect = index === currentCase.correct;
+
+            // Deshabilitar todos los botones
+            for (let i = 0; i < 3; i++) {
+                document.getElementById(`opt-${i}`).disabled = true;
+            }
+
+            // Aplicar colores de éxito o error
+            const selectedBtn = document.getElementById(`opt-${index}`);
+            if (isCorrect) {
+                score++;
+                document.getElementById('correct-score').innerText = score;
+                selectedBtn.className = "w-full text-left p-4 rounded-2xl border border-emerald-600 bg-emerald-950/20 correct-glow flex gap-3 transform scale-[1.02] transition-all duration-300";
+                playSound('correct');
+                showFeedback(true, "¡Elección Correcta!", currentCase.explanation);
+            } else {
+                selectedBtn.className = "w-full text-left p-4 rounded-2xl border border-red-600 bg-red-950/20 wrong-glow flex gap-3 transform scale-95 transition-all duration-300";
+                // Resaltar la correcta también
+                document.getElementById(`opt-${currentCase.correct}`).className = "w-full text-left p-4 rounded-2xl border border-emerald-600/60 bg-emerald-950/10 flex gap-3 transition-all duration-300";
+                playSound('wrong');
+                showFeedback(false, "Decisión Incorrecta", currentCase.explanation);
+            }
+
+            // Habilitar botón de siguiente caso
+            document.getElementById('btn-next').disabled = false;
+            document.getElementById('btn-next').classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+
+        // Mostrar retroalimentación interactiva
+        function showFeedback(isCorrect, title, text) {
+            const fbBox = document.getElementById('feedback-box');
+            const fbIcon = document.getElementById('feedback-icon');
+            const fbTitle = document.getElementById('feedback-title');
+            const fbText = document.getElementById('feedback-text');
+
+            fbBox.classList.remove('hidden');
+            setTimeout(() => {
+                fbBox.className = `p-4 rounded-2xl border mb-4 transform scale-100 opacity-100 transition-all duration-300 ${
+                    isCorrect ? 'border-emerald-800 bg-emerald-950/20 text-emerald-300' : 'border-red-800 bg-red-950/20 text-red-300'
+                }`;
+            }, 50);
+
+            fbIcon.innerHTML = isCorrect ? '<i class="fa-solid fa-square-check"></i>' : '<i class="fa-solid fa-triangle-exclamation"></i>';
+            fbTitle.innerText = title;
+            fbText.innerText = text;
+        }
+
+        // Siguiente caso o finalizar
+        function nextCase() {
+            currentCaseIdx++;
+            if (currentCaseIdx < cases.length) {
+                loadCase();
+            } else {
+                endGame();
+            }
+        }
+
+        // Pantalla final
+        function endGame() {
+            document.getElementById('screen-game').classList.add('hidden');
+            document.getElementById('screen-result').classList.remove('hidden');
+
+            const scorePct = Math.round((score / cases.length) * 100);
+            document.getElementById('final-score').innerText = `${score} / ${cases.length}`;
+            document.getElementById('final-pct').innerText = `${scorePct}%`;
+
+            let rating = "";
+            let feedback = "";
+
+            if (scorePct === 100) {
+                rating = "Guardián Supremo de la Confidencialidad";
+                feedback = "¡Perfecto! Has tomado decisiones íntegras y correctas en todos los escenarios del comité. Sabes cuidar de la información sensible de las personas y de los marcos legales con excelencia absoluta.";
+                playSound('win');
+                startConfetti();
+            } else if (scorePct >= 70) {
+                rating = "Oficial de Datos Confiable";
+                feedback = "¡Excelente trabajo! Has resuelto la mayoría de los casos con alto criterio ético y legal. Con un poco más de práctica estarás totalmente listo para liderar la custodia del comité.";
+                playSound('win');
+            } else {
+                rating = "Practicante del Comité";
+                feedback = "Has completado la revisión, pero te recomendamos estudiar nuevamente los lineamientos del comité para asegurar que no pongas en riesgo la integridad de la información sensible en escenarios reales.";
+            }
+
+            document.getElementById('final-rating').innerText = rating;
+            document.getElementById('final-feedback-text').innerText = feedback;
+        }
+
+        // Generar confeti por código
+        function startConfetti() {
+            const container = document.getElementById('confetti-container');
+            container.innerHTML = '';
+            const colors = ['#3b82f6', '#60a5fa', '#34d399', '#fbcfe8', '#a7f3d0'];
+            
+            for (let i = 0; i < 60; i++) {
+                const conf = document.createElement('div');
+                conf.className = 'confetti';
+                conf.style.left = `${Math.random() * 100}%`;
+                conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                conf.style.animationDelay = `${Math.random() * 2}s`;
+                conf.style.animationDuration = `${2 + Math.random() * 3}s`;
+                container.appendChild(conf);
+            }
+        }
+    </script>
+</body>
+</html>
